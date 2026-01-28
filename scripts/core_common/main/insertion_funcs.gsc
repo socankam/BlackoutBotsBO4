@@ -112,6 +112,41 @@ WaitForLanding_Simple(timeoutMs)
     }
 }
 
+IsOnRealSurface()
+{
+    if (!isAlive(self) || !isDefined(self.origin))
+        return false;
+
+    if (!self isonground())
+        return false;
+
+    now = gettime();
+
+    if (isDefined(self.bo_ground_cache_t) && (now - self.bo_ground_cache_t) < 250)
+    {
+        if (isDefined(self.bo_ground_cache_val))
+            return self.bo_ground_cache_val;
+    }
+
+    self.bo_ground_cache_t = now;
+
+    start = (self.origin[0], self.origin[1], self.origin[2] + 60);
+    end = (self.origin[0], self.origin[1], self.origin[2] - 20000);
+
+    tr = bullettrace(start, end, 0, self);
+
+    if (isDefined(tr) && isDefined(tr["position"]))
+    {
+        dz = abs(self.origin[2] - tr["position"][2]);
+
+        self.bo_ground_cache_val = (dz <= 220);
+        return self.bo_ground_cache_val;
+    }
+
+    self.bo_ground_cache_val = true;
+    return true;
+}
+
 GetDzToGroundSafe(ent)
 {
     if (!isDefined(ent))

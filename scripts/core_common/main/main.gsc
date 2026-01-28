@@ -311,6 +311,46 @@ AssignRandomCharacter()
     self SetBotCharacterByIndex(idx);
 }
 
+GiveArmor()
+{
+    if (!self isTestClient()) return false;
+
+    tier = 2;
+    roll = randomint(100);
+    if (roll < 55) tier = 1;
+    else if (roll < 90) tier = 2;
+    else tier = 3;
+
+    if (tier == 1) item_id = #"armor_item_small";
+    else if (tier == 2) item_id = #"armor_item_medium";
+    else item_id = #"armor_item_large";
+
+    maxArmor = 50 * tier;
+    armorNow = maxArmor;
+
+    self armor::set_armor(armorNow, maxArmor, tier);
+    self clientfield::set_player_uimodel("hudItems.armorType", tier);
+
+    #ifdef _SUPPORTS_LAZYLINK
+        get_item = &function_4ba8fde;
+        get_slotid = @item_inventory<scripts\mp_common\item_inventory.gsc>::function_e66dcff5;
+        give_item = @item_world<scripts\mp_common\item_world.gsc>::function_de2018e3;
+
+        if (isDefined(get_item) && isDefined(get_slotid) && isDefined(give_item))
+        {
+            itemobj = [[get_item]](item_id);
+            if (isDefined(itemobj))
+            {
+                slotid = self [[get_slotid]](itemobj);
+                if (isDefined(slotid))
+                    self [[give_item]](itemobj, self, slotid);
+            }
+        }
+    #endif
+
+    return true;
+}
+
 GiveRandomLoot()
 {
     if (!self isTestClient()) return false;
@@ -804,14 +844,14 @@ LifeStartThreads()
     level endon("game_ended");
     self endon("bo_brain_restart");
 
-    if (isDefined(self.sessionstate) && self.sessionstate != "playing") return;
-
-    if (self isonground() && !self isinvehicle() && !IsHighAltitudeInsertion())
+    if (isDefined(self.sessionstate) && self.sessionstate != "playing")
         return;
 
     self.bo_landing_loadout_done = false;
     self.bo_landing_gun_done = false;
+
     self thread LandingLoadoutWatcher();
+
     self.bo_insertion_active = true;
     self.bo_hardtp_until = gettime() + 8500;
 
@@ -824,17 +864,13 @@ LifeStartThreads()
     self thread InsertionSkyStuckWatchdog();
     self thread InsertionAirSteerWatchdog();
 
-    landed = WaitForLanding_Simple(35000);
-
-    if (self isonground())
+    if (IsOnRealSurface())
     {
         self.bo_insertion_active = false;
         self EnsureArmedImmediate();
     }
 
     self SetPOIPriorityWindow(22000, 38000);
-
-    self thread ArmNow_OnSpawn();
 
     self thread EnsureArmedAfterLanding();
     self thread RearmAfterRedeployLanding();
@@ -843,48 +879,8 @@ LifeStartThreads()
     self thread WaterOrOutOfMapRescueLoop();
     self thread WeaponWatchdogLoop();
 
-    if (self isonground())
+    if (IsOnRealSurface())
         self thread BO_TeamSpreadSpawn_OnLifeStart();
-}
-
-GiveArmor()
-{
-    if (!self isTestClient()) return false;
-
-    tier = 2;
-    roll = randomint(100);
-    if (roll < 55) tier = 1;
-    else if (roll < 90) tier = 2;
-    else tier = 3;
-
-    if (tier == 1) item_id = #"armor_item_small";
-    else if (tier == 2) item_id = #"armor_item_medium";
-    else item_id = #"armor_item_large";
-
-    maxArmor = 50 * tier;
-    armorNow = maxArmor;
-
-    self armor::set_armor(armorNow, maxArmor, tier);
-    self clientfield::set_player_uimodel("hudItems.armorType", tier);
-
-    #ifdef _SUPPORTS_LAZYLINK
-        get_item = &function_4ba8fde;
-        get_slotid = @item_inventory<scripts\mp_common\item_inventory.gsc>::function_e66dcff5;
-        give_item = @item_world<scripts\mp_common\item_world.gsc>::function_de2018e3;
-
-        if (isDefined(get_item) && isDefined(get_slotid) && isDefined(give_item))
-        {
-            itemobj = [[get_item]](item_id);
-            if (isDefined(itemobj))
-            {
-                slotid = self [[get_slotid]](itemobj);
-                if (isDefined(slotid))
-                    self [[give_item]](itemobj, self, slotid);
-            }
-        }
-    #endif
-
-    return true;
 }
 
 BO_TeamSpreadSpawn_OnLifeStart(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z)

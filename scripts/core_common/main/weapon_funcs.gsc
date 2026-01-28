@@ -100,8 +100,9 @@ LandingLoadoutWatcher()
     self endon("bo_brain_restart");
 
     t0 = gettime();
-    while (!self isonground() && gettime() - t0 < 45000)
-        wait 0.05;
+
+    while (!IsOnRealSurface() && gettime() - t0 < 45000)
+        wait 0.20;
 
     if (!isAlive(self))
         return;
