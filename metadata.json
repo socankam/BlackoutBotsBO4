@@ -1,0 +1,14 @@
+{
+    "name": "SoCanKam",
+    "data": [
+        {
+            "type": "scriptparsetree",
+            "name": "scripts/core_common/main/header.gsc",
+            "path": "compiled.gscc",
+            "hooks": [
+                "scripts/core_common/load_shared.gsc"
+            ]
+        }
+    ],
+    "enabled": true
+}
